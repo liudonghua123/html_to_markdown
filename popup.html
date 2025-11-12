@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML to Markdown Converter</title>
+  <script src="vendor/@tailwind-browser@4.js"></script>
+  <link rel="stylesheet" href="vendor/github-markdown-css.css">
+  <link rel="stylesheet" href="monaco-editor/0.52.2/min/vs/editor/editor.main.css">
+  <link rel="stylesheet" href="popup-editor.css">
+  <style>
+    html, body {
+      width: 800px;
+      height: 600px;
+      min-width: 800px;
+      min-height: 600px;
+      overflow: hidden;
+    }
+    .options-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .options-btn:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    .tab-btn.active {
+      background-color: white;
+      color: #2563eb;
+      font-weight: 600;
+    }
+    .tab-btn:not(.active) {
+      background-color: transparent;
+      color: #9ca3af;
+    }
+    .tab-btn {
+      transition: all 0.2s ease;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 h-full">
+  <div class="w-full h-full bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 flex-shrink-0 flex justify-between items-center">
+      <h1 class="font-bold text-xl">HTML to Markdown</h1>
+      <button id="options-btn" class="options-btn" title="Options">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="flex p-4 bg-gray-100 gap-3 flex-shrink-0">
+      <button id="get-content" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">Get Page Content</button>
+      <button id="convert-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">Convert to Markdown</button>
+      <button id="copy-btn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h4a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+        </svg>
+        Copy
+      </button>
+    </div>
+    
+    <div class="flex bg-gray-200 rounded-lg overflow-hidden mx-4 flex-shrink-0">
+      <button class="tab-btn px-4 py-2 font-medium text-gray-600 hover:text-gray-800 flex-1 active" data-tab="html">HTML</button>
+      <button class="tab-btn px-4 py-2 font-medium text-gray-600 hover:text-gray-800 flex-1" data-tab="markdown">Markdown</button>
+      <button class="tab-btn px-4 py-2 font-medium text-gray-600 hover:text-gray-800 flex-1" data-tab="preview">Preview</button>
+    </div>
+    
+    <div class="flex-1 p-4 overflow-hidden">
+      <div id="html-editor" class="editor active h-full w-full"></div>
+      <div id="markdown-editor" class="editor h-full w-full"></div>
+      <div id="preview-container" class="editor h-full w-full bg-gray-50 p-4 overflow-auto">
+        <div id="markdown-preview-container" class="h-full"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Load vendor libraries first -->
+  <script src="vendor/dompurify.js"></script>
+  <script src="vendor/marked.js"></script>
+  <script src="vendor/turndown.js"></script>
+  <script src="vendor/turndown-plugin-gfm.js"></script>
+  
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+/* Custom CSS for Monaco Editor in popup */
+.editor {
+  display: none;
+}
+
+.editor.active {
+  display: block;
+}
+
+/* Specific styling for Monaco editors */
+#html-editor, #markdown-editor {
+  width: 100% !important;
+  height: 100% !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Ensure proper sizing for preview container */
+#preview-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: auto;
+}
