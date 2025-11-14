@@ -89,14 +89,15 @@ html_to_markdown/
 ├── manifest.json              # Extension manifest
 ├── popup.html                 # Popup interface
 ├── popup.js                   # Popup logic
-├── popup-editor.css           # Popup editor styles
+├── popup.css                  # Popup editor styles
 ├── options.html               # Options page
 ├── options.js                 # Options logic
-├── options-editor.css         # Options editor styles
+├── options.css                # Options editor styles
 ├── background.js              # Background service worker
 ├── README.md                  # English documentation
 ├── README-zh_CN.md            # Chinese documentation
-├── icon*.png                  # Extension icons
+├── icons/                     # icons
+│   ├── icon*.png              # Extension icons
 ├── vendor/                    # Third-party libraries
 │   ├── @tailwind-browser@4.js
 │   ├── turndown.js

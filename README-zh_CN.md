@@ -88,14 +88,15 @@ html_to_markdown/
 ├── manifest.json              # 扩展清单
 ├── popup.html                 # 弹出界面
 ├── popup.js                   # 弹出逻辑
-├── popup-editor.css           # 弹出编辑器样式
+├── popup.css                  # 弹出编辑器样式
 ├── options.html               # 选项页面
 ├── options.js                 # 选项逻辑
-├── options-editor.css         # 选项编辑器样式
+├── options.css                # 选项编辑器样式
 ├── background.js              # 后台服务工作程序
 ├── README.md                  # 英文文档
 ├── README-zh_CN.md            # 中文文档
-├── icon*.png                  # 扩展图标
+├── icons/                     # 图标
+│   ├── icon*.png              # 扩展图标
 ├── vendor/                    # 第三方库
 │   ├── @tailwind-browser@4.js
 │   ├── turndown.js
