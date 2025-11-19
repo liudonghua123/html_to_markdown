@@ -27,7 +27,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "monaco-editor/**/*",
         "vendor/**/*"
       ],
       "matches": [
