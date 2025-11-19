@@ -14,6 +14,8 @@ HTML to Markdown Converter is a Chrome extension that allows you to easily conve
 - **Monaco Editor Integration**: Rich text editing with syntax highlighting for both HTML and Markdown
 - **Live Preview**: Real-time Markdown preview with GitHub styling
 - **URL-based Selector Rules**: Configure custom CSS selectors for specific URL patterns
+- **Smart Rule Matching**: Priority-based rule matching to use the most specific rule first
+- **Import/Export Settings**: Import and export configuration to backup or share settings
 - **Content Sanitization**: Optional DOMPurify integration for security
 - **Custom CSS Editor**: Add custom styles to the extension UI
 - **Copy Functionality**: Copy content from any active tab with one click
@@ -56,7 +58,8 @@ The extension will be available on the Chrome Web Store once published.
 2. Toggle DOMPurify on/off for security in General Settings
 3. Add custom rules for specific URLs with CSS selectors in Rule Configuration
 4. Add custom CSS to style the extension UI in the Custom CSS section
-5. Click "Save Options" to persist your changes
+5. Use "Import Settings" and "Export Settings" buttons to backup or share your configuration
+6. Click "Save Options" to persist your changes
 
 ## Screenshots
 
