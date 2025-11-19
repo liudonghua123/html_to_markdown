@@ -6,9 +6,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   const addRuleBtn = document.getElementById('add-rule');
   const saveOptionsBtn = document.getElementById('save-options');
   const resetOptionsBtn = document.getElementById('reset-options');
-  
+  const importOptionsBtn = document.getElementById('import-options');
+  const exportOptionsBtn = document.getElementById('export-options');
+
   let cssEditor;
-  
+
   // Initialize Monaco editor for CSS
   async function initCSSEditor() {
     // Load Monaco Editor
@@ -17,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         resolve();
         return;
       }
-      
+
       self.MonacoEnvironment = {
         getWorkerUrl: function (moduleId, label) {
           return chrome.runtime.getURL('vendor/monaco-editor/0.52.2/min/vs/base/worker/workerMain.js');
@@ -42,12 +44,12 @@ document.addEventListener('DOMContentLoaded', async function() {
               automaticLayout: true,
               minimap: { enabled: false }
             });
-            
+
             // Trigger layout to ensure proper sizing
             setTimeout(() => {
               if (cssEditor) cssEditor.layout();
             }, 100);
-            
+
             resolve();
           }, (err) => {
             console.error('Monaco editor failed to load:', err);
@@ -65,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.head.appendChild(script);
     });
   }
-  
+
   // Load saved options
   function loadOptions() {
     chrome.storage.sync.get({
@@ -76,15 +78,15 @@ document.addEventListener('DOMContentLoaded', async function() {
       customCSS: ''
     }, function(items) {
       dompurifyToggle.checked = items.enableDOMPurify;
-      
+
       // Clear existing rules
       ruleList.innerHTML = '';
-      
+
       // Add rules to the UI
       items.rules.forEach((rule, index) => {
         addRuleToUI(rule.urlPattern, rule.selector, index);
       });
-      
+
       // Set CSS in editor
       if (cssEditor) {
         cssEditor.setValue(items.customCSS);
@@ -98,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     });
   }
-  
+
   // Add a rule to the UI
   function addRuleToUI(urlPattern, selector, index) {
     const ruleItem = document.createElement('div');
@@ -110,26 +112,99 @@ document.addEventListener('DOMContentLoaded', async function() {
     `;
     ruleList.appendChild(ruleItem);
   }
-  
+
+  // Import options from a JSON file
+  function importOptions() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+
+          // Validate the imported data structure
+          if (typeof importedData.enableDOMPurify === 'undefined' || !Array.isArray(importedData.rules)) {
+            throw new Error('Invalid settings file format');
+          }
+
+          // Set the imported data
+          chrome.storage.sync.set(importedData, function() {
+            if (chrome.runtime.lastError) {
+              console.error('Error importing settings:', chrome.runtime.lastError);
+              alert('Error importing settings: ' + chrome.runtime.lastError.message);
+              return;
+            }
+
+            // Reload the page to reflect the imported settings
+            location.reload();
+            alert('Settings imported successfully!');
+          });
+        } catch (error) {
+          console.error('Error parsing imported settings:', error);
+          alert('Error parsing settings file: ' + error.message);
+        }
+      };
+
+      reader.readAsText(file);
+    };
+
+    input.click();
+  }
+
+  // Export options to a JSON file
+  function exportOptions() {
+    chrome.storage.sync.get({
+      enableDOMPurify: true,
+      rules: [
+        { urlPattern: 'http(s)?://.*', selector: 'body' }
+      ],
+      customCSS: ''
+    }, function(items) {
+      if (chrome.runtime.lastError) {
+        console.error('Error exporting settings:', chrome.runtime.lastError);
+        alert('Error exporting settings: ' + chrome.runtime.lastError.message);
+        return;
+      }
+
+      const dataStr = JSON.stringify(items, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+      const exportFileDefaultName = 'html-to-markdown-settings.json';
+
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+
+      alert('Settings exported successfully!');
+    });
+  }
+
   // Event listeners
   addRuleBtn.addEventListener('click', function() {
     addRuleToUI('', '', ruleList.children.length);
   });
-  
+
   // Use event delegation for remove rule buttons
   ruleList.addEventListener('click', function(e) {
     if (e.target.classList.contains('remove-rule')) {
       e.target.parentElement.remove();
     }
   });
-  
+
   saveOptionsBtn.addEventListener('click', function() {
     // Collect rules from UI
     const rules = [];
     document.querySelectorAll('.flex.items-center.gap-2.p-2').forEach(item => {
       const urlPattern = item.querySelector('input:first-child').value;
       const selector = item.querySelector('input:nth-child(2)').value;
-      
+
       if (urlPattern && selector) {
         rules.push({
           urlPattern: urlPattern,
@@ -137,13 +212,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
       }
     });
-    
+
     const options = {
       enableDOMPurify: dompurifyToggle.checked,
       rules: rules,
       customCSS: cssEditor ? cssEditor.getValue() : ''
     };
-    
+
     chrome.storage.sync.set(options, function() {
       // Show confirmation
       const originalText = saveOptionsBtn.textContent;
@@ -153,7 +228,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }, 2000);
     });
   });
-  
+
   resetOptionsBtn.addEventListener('click', function() {
     if (confirm('Are you sure you want to reset all options to defaults?')) {
       chrome.storage.sync.clear(function() {
@@ -161,7 +236,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     }
   });
-  
+
+  // Import/export event listeners
+  importOptionsBtn.addEventListener('click', importOptions);
+  exportOptionsBtn.addEventListener('click', exportOptions);
+
   // Initialize the editor and load options
   await initCSSEditor();
   loadOptions();
