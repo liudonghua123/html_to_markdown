@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   const convertBtn = document.getElementById('convert-btn');
   const copyBtn = document.getElementById('copy-btn');
   const optionsBtn = document.getElementById('options-btn');
-  
+
   // Track the currently active tab
   let currentTab = 'html'; // Default to HTML tab
-  
+
   // Editor instances
   let htmlEditor;
   let markdownEditor;
-  
+
   // Initialize Monaco editors
   async function initMonacoEditors() {
     return new Promise((resolve, reject) => {
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         resolve();
         return;
       }
-      
+
       self.MonacoEnvironment = {
         getWorkerUrl: function (moduleId, label) {
           return chrome.runtime.getURL('vendor/monaco-editor/0.52.2/min/vs/base/worker/workerMain.js');
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async function() {
               automaticLayout: true,
               minimap: { enabled: false }
             });
-            
+
             // Create Markdown editor
             markdownEditor = monaco.editor.create(markdownEditorContainer, {
               value: '# Markdown will appear here',
@@ -61,18 +61,18 @@ document.addEventListener('DOMContentLoaded', async function() {
               automaticLayout: true,
               minimap: { enabled: false }
             });
-            
+
             // Set up change listener to update preview
             markdownEditor.onDidChangeModelContent(() => {
               updatePreview();
             });
-            
+
             // Trigger layout to ensure proper sizing
             setTimeout(() => {
               if (htmlEditor) htmlEditor.layout();
               if (markdownEditor) markdownEditor.layout();
             }, 100);
-            
+
             resolve();
           }, (err) => {
             console.error('Monaco editor failed to load:', err);
@@ -90,21 +90,21 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.head.appendChild(script);
     });
   }
-  
+
   // Update markdown preview using shadow DOM for proper styling
   function updatePreview() {
     if (typeof marked !== 'undefined' && markdownEditor) {
       const markdownText = markdownEditor.getValue();
       const html = marked.parse(markdownText);
-      
+
       const previewContainer = document.getElementById('markdown-preview-container');
-      
+
       // Create or reuse shadow root
       let shadowRoot = previewContainer.shadowRoot;
       if (!shadowRoot) {
         shadowRoot = previewContainer.attachShadow({ mode: 'open' });
       }
-      
+
       // Apply GitHub Markdown CSS
       shadowRoot.innerHTML = `
         <style>
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       `;
     }
   }
-  
+
   // Function to get GitHub Markdown CSS content
   function getGithubMarkdownCSS() {
     // We'll inject the CSS as a string
@@ -1103,30 +1103,30 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     `;
   }
-  
+
   // Tab switching functionality
   tabButtons.forEach(button => {
     button.addEventListener('click', function() {
       const tab = this.getAttribute('data-tab');
-      
+
       // Update active tab button
       tabButtons.forEach(btn => btn.classList.remove('active'));
       this.classList.add('active');
-      
+
       // Track current tab
       currentTab = tab;
-      
+
       // Show appropriate editor
       editors.forEach(editor => {
         editor.classList.remove('active');
-        if (editor.id === `${tab}-editor` || 
+        if (editor.id === `${tab}-editor` ||
             (tab === 'preview' && editor.id === 'preview-container')) {
           editor.classList.add('active');
         }
       });
     });
   });
-  
+
   // Open options page
   optionsBtn.addEventListener('click', function() {
     if (chrome.runtime.openOptionsPage) {
@@ -1136,12 +1136,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       window.open(chrome.runtime.getURL('options.html'));
     }
   });
-  
+
   // Copy content of the active tab
   copyBtn.addEventListener('click', async function() {
     // Determine which content to copy based on the current active tab
     let contentToCopy = '';
-    
+
     if (currentTab === 'html' && htmlEditor) {
       contentToCopy = htmlEditor.getValue();
     } else if (currentTab === 'markdown' && markdownEditor) {
@@ -1158,11 +1158,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
       }
     }
-    
+
     if (contentToCopy) {
       try {
         await navigator.clipboard.writeText(contentToCopy);
-        
+
         // Visual feedback
         const originalText = copyBtn.innerHTML;
         copyBtn.innerHTML = `
@@ -1170,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
           Copied!`;
-        
+
         setTimeout(() => {
           copyBtn.innerHTML = originalText;
         }, 2000);
@@ -1182,33 +1182,40 @@ document.addEventListener('DOMContentLoaded', async function() {
       alert('No content to copy in the currently active tab');
     }
   });
-  
+
   // Get HTML content from current page
   getContentBtn.addEventListener('click', async function() {
     try {
       // Get active tab
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
+
       // Get the URL of the active tab
       const url = tab.url;
-      
+
       // Retrieve options to get rules
       const options = await chrome.storage.sync.get({
         rules: [
           { urlPattern: 'http(s)?://.*', selector: 'body' }
         ]
       });
-      
-      // Find matching rule
+
+      // Find matching rule - prioritize more specific patterns by matching longer patterns first
       let selector = 'body'; // default selector
+      let bestMatchLength = 0;
+
       for (const rule of options.rules) {
         const regex = new RegExp(rule.urlPattern);
         if (regex.test(url)) {
-          selector = rule.selector;
-          break;
+          // Calculate match length - use the full pattern length as an approximation
+          // since we want to prioritize more specific patterns (longer patterns tend to be more specific)
+          const patternLength = rule.urlPattern.length;
+          if (patternLength > bestMatchLength) {
+            bestMatchLength = patternLength;
+            selector = rule.selector;
+          }
         }
       }
-      
+
       // Execute content script to get HTML
       const result = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
@@ -1218,13 +1225,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         },
         args: [selector]
       });
-      
+
       if (result && result[0] && result[0].result) {
         const htmlContent = result[0].result;
-        
+
         if (htmlEditor) {
           htmlEditor.setValue(htmlContent);
-          
+
           // Format the HTML using Monaco's built-in formatter
           // Wait a moment for the value to be set, then trigger formatting
           setTimeout(() => {
@@ -1245,32 +1252,32 @@ document.addEventListener('DOMContentLoaded', async function() {
       alert('Error getting content from the page: ' + error.message);
     }
   });
-  
 
-  
+
+
   // Convert HTML to Markdown
   convertBtn.addEventListener('click', async function() {
     if (!htmlEditor || !markdownEditor) {
       alert('Editors are not ready yet. Please wait and try again.');
       return;
     }
-    
+
     try {
       // Get current HTML content
       const htmlContent = htmlEditor.getValue();
-      
+
       // Get options to check if DOMPurify should be used
       const options = await chrome.storage.sync.get({
         enableDOMPurify: true
       });
-      
+
       // Process HTML with DOMPurify if enabled
       let processedHtml = htmlContent;
       if (options.enableDOMPurify) {
         // DOMPurify is loaded globally, so we'll need access to it
         processedHtml = DOMPurify.sanitize(htmlContent);
       }
-      
+
       // Perform conversion using Turndown
       if (window.TurndownService) {
         const turndownService = new TurndownService({
@@ -1283,15 +1290,15 @@ document.addEventListener('DOMContentLoaded', async function() {
           linkStyle: 'inlined',
           linkReferenceStyle: 'full'
         });
-        
+
         // Add GFM (GitHub Flavored Markdown) plugins if available
         if (window.turndownPluginGfm) {
           turndownService.use(turndownPluginGfm.gfm);
         }
-        
+
         const markdown = turndownService.turndown(processedHtml);
         markdownEditor.setValue(markdown);
-        
+
         // Update preview
         updatePreview();
       } else {
@@ -1302,10 +1309,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       alert('Error during conversion: ' + error.message);
     }
   });
-  
+
   // Initialize editors and load options
   await initMonacoEditors();
-  
+
   // Load any previously saved content
   chrome.storage.local.get(['lastHtml', 'lastMarkdown'], function(result) {
     if (result.lastHtml && htmlEditor) {
@@ -1316,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       updatePreview();
     }
   });
-  
+
   // Set initial currentTab based on the active button
   const initialActiveButton = document.querySelector('.tab-btn.active');
   if (initialActiveButton) {
